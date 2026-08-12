@@ -6,3 +6,4 @@ public record RefreshRequest(string RefreshToken);
 public record LogoutRequest(string RefreshToken);
 
 public record AuthResponse(string AccessToken, string RefreshToken, DateTimeOffset RefreshTokenExpiresAt);
+public record ExchangeCodeRequest(Guid Code);

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ApiError } from "../api/client";
+import { api, ApiError } from "../api/client";
 import { useSession } from "../auth/SessionContext";
 
 export function AuthPage() {
@@ -9,7 +9,7 @@ export function AuthPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { login, register } = useSession();
+  const { login, register, completingOAuth, oauthError } = useSession();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -28,11 +28,29 @@ export function AuthPage() {
     }
   }
 
+  if (completingOAuth) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <p className="muted">Completing sign-in…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-card">
         <h1>SecureAccess</h1>
         <p className="subtitle">Enterprise identity &amp; access management</p>
+
+        <button type="button" className="ghost google-button" onClick={() => (window.location.href = api.googleLoginUrl())}>
+          Continue with Google
+        </button>
+
+        <div className="divider">
+          <span>or</span>
+        </div>
 
         <div className="tabs">
           <button className={mode === "login" ? "tab active" : "tab"} onClick={() => setMode("login")} type="button">
@@ -59,7 +77,7 @@ export function AuthPage() {
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
           </label>
 
-          {error && <div className="error">{error}</div>}
+          {(error || oauthError) && <div className="error">{error ?? oauthError}</div>}
 
           <button type="submit" className="primary" disabled={loading}>
             {loading ? "Please wait…" : mode === "login" ? "Log in" : "Create organization"}

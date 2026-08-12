@@ -1,6 +1,8 @@
 using System.Text;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +37,7 @@ if (string.IsNullOrEmpty(builder.Configuration.GetConnectionString("Default")) &
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.Configure<RateLimitOptions>(builder.Configuration.GetSection(RateLimitOptions.SectionName));
+builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection(FrontendOptions.SectionName));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -77,6 +80,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
+builder.Services.AddSingleton<IOAuthCodeStore, OAuthCodeStore>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
@@ -111,6 +116,27 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(jwtOptions.SigningKey)),
         ClockSkew = TimeSpan.FromSeconds(30),
     };
+})
+// "External" is a short-lived cookie used only to carry the OAuth handshake between Google's
+// redirect back to us and our own /auth/google/complete handler — it never becomes the app's
+// session mechanism, which stays the JWT bearer scheme above (DefaultAuthenticateScheme is
+// untouched, so [Authorize] on API endpoints is unaffected by any of this).
+.AddCookie("External")
+.AddGoogle(options =>
+{
+    options.SignInScheme = "External";
+
+    // AddGoogle's handler validates ClientId/ClientSecret as non-empty on every request (not
+    // just Google ones) — it has to probe each request's path against its CallbackPath. If
+    // Google isn't configured yet (e.g. this environment), a placeholder keeps the rest of the
+    // API working; anyone who actually clicks "Continue with Google" just gets a clear error
+    // from Google's own authorize endpoint instead of every request in the app 500ing.
+    var clientId = builder.Configuration["Google:ClientId"];
+    var clientSecret = builder.Configuration["Google:ClientSecret"];
+    options.ClientId = string.IsNullOrWhiteSpace(clientId) ? "not-configured" : clientId;
+    options.ClientSecret = string.IsNullOrWhiteSpace(clientSecret) ? "not-configured" : clientSecret;
+    options.CallbackPath = "/auth/google/callback";
+    options.ClaimActions.Add(new JsonKeyClaimAction("email_verified", System.Security.Claims.ClaimValueTypes.String, "email_verified"));
 });
 
 builder.Services.AddAuthorizationBuilder();

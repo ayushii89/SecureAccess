@@ -11,5 +11,12 @@
   },
   "Cors": {
     "AllowedOrigins": [ "http://localhost:5173" ]
+  },
+  "Google": {
+    "ClientId": "<from Google Cloud Console OAuth Client>",
+    "ClientSecret": "<from Google Cloud Console OAuth Client>"
+  },
+  "Frontend": {
+    "BaseUrl": "http://localhost:5173"
   }
 }

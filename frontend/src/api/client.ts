@@ -51,6 +51,10 @@ export const api = {
 
   logout: (refreshToken: string) => request<void>("/auth/logout", { method: "POST", body: { refreshToken } }),
 
+  googleLoginUrl: () => `${BASE_URL}/auth/google/login`,
+
+  exchangeOAuthCode: (code: string) => request<AuthResponse>("/auth/google/exchange", { method: "POST", body: { code } }),
+
   getRoles: (accessToken: string) => request<RoleResponse[]>("/roles", { accessToken }),
 
   createRole: (accessToken: string, name: string, permissionNames: string[]) =>

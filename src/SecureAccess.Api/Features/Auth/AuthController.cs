@@ -64,6 +64,11 @@ public class AuthController : ControllerBase
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email, ct);
 
+        if (user is not null && user.PasswordHash is null)
+        {
+            return Unauthorized("This account uses Google sign-in. Continue with Google instead.");
+        }
+
         if (user is null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
             if (user is not null)
