@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: secureaccess-postgres
+    environment:
+      POSTGRES_USER: secureaccess
+      POSTGRES_PASSWORD: secureaccess_dev
+      POSTGRES_DB: secureaccess
+    ports:
+      - "5432:5432"
+    volumes:
+      - secureaccess_pgdata:/var/lib/postgresql/data
+
+volumes:
+  secureaccess_pgdata:

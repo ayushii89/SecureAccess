@@ -1,0 +1,15 @@
+{
+  "ConnectionStrings": {
+    "Default": "Host=localhost;Port=5432;Database=secureaccess;Username=secureaccess;Password=secureaccess_dev"
+  },
+  "Jwt": {
+    "SigningKey": "<base64-encoded random 256-bit key, e.g. `openssl rand -base64 32`>",
+    "Issuer": "SecureAccess",
+    "Audience": "SecureAccess.Clients",
+    "AccessTokenMinutes": 15,
+    "RefreshTokenDays": 7
+  },
+  "Cors": {
+    "AllowedOrigins": [ "http://localhost:5173" ]
+  }
+}
