@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { api, ApiError } from "../api/client";
 import { useSession } from "../auth/SessionContext";
+import { IconGoogle, IconShieldLogo } from "../components/icons";
 
 export function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -31,7 +32,8 @@ export function AuthPage() {
   if (completingOAuth) {
     return (
       <div className="auth-page">
-        <div className="auth-card">
+        <div className="auth-card auth-card-centered">
+          <div className="spinner" />
           <p className="muted">Completing sign-in…</p>
         </div>
       </div>
@@ -41,10 +43,14 @@ export function AuthPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
+        <div className="auth-logo">
+          <IconShieldLogo size={30} />
+        </div>
         <h1>SecureAccess</h1>
         <p className="subtitle">Enterprise identity &amp; access management</p>
 
         <button type="button" className="ghost google-button" onClick={() => (window.location.href = api.googleLoginUrl())}>
+          <IconGoogle />
           Continue with Google
         </button>
 

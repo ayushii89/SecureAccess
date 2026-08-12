@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import type { RoleResponse, UserResponse } from "../api/types";
 import { useSession } from "../auth/SessionContext";
+import { TableSkeleton } from "./Skeleton";
 
 export function UsersPanel() {
   const { session } = useSession();
@@ -47,7 +48,7 @@ export function UsersPanel() {
   }
 
   if (error) return <div className="error">{error}</div>;
-  if (!users) return <p className="muted">Loading users…</p>;
+  if (!users) return <TableSkeleton columns={2} />;
 
   return (
     <div>

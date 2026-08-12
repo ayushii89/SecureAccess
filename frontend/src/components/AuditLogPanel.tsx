@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import type { AuditLogResponse } from "../api/types";
 import { useSession } from "../auth/SessionContext";
+import { TableSkeleton } from "./Skeleton";
+import { IconAudit } from "./icons";
 
 export function AuditLogPanel() {
   const { session } = useSession();
@@ -18,8 +20,15 @@ export function AuditLogPanel() {
   }, [session]);
 
   if (error) return <div className="error">{error}</div>;
-  if (!logs) return <p className="muted">Loading audit log…</p>;
-  if (logs.length === 0) return <p className="muted">No events yet.</p>;
+  if (!logs) return <TableSkeleton columns={3} />;
+  if (logs.length === 0) {
+    return (
+      <div className="empty-state">
+        <IconAudit size={28} />
+        <p className="muted">No events yet.</p>
+      </div>
+    );
+  }
 
   return (
     <table>

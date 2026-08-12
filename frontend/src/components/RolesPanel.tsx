@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError, PERMISSION_CATALOG } from "../api/client";
 import type { RoleResponse } from "../api/types";
 import { useSession } from "../auth/SessionContext";
+import { TableSkeleton } from "./Skeleton";
 
 export function RolesPanel() {
   const { session } = useSession();
@@ -46,7 +47,7 @@ export function RolesPanel() {
   }
 
   if (error) return <div className="error">{error}</div>;
-  if (!roles) return <p className="muted">Loading roles…</p>;
+  if (!roles) return <TableSkeleton columns={2} />;
 
   return (
     <div>
