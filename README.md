@@ -18,6 +18,7 @@
 
 ## Contents
 
+- [Screenshots](#screenshots)
 - [Highlights](#highlights)
 - [Tech stack](#tech-stack)
 - [Architecture](#architecture)
@@ -26,6 +27,19 @@
 - [Testing](#testing)
 - [Deployment](#deployment)
 - [Roadmap](#roadmap)
+
+## Screenshots
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/login.png" alt="Login screen with email/password and Continue with Google" /><br/><sub>Login — password or Google OAuth</sub></td>
+<td width="50%"><img src="docs/screenshots/roles.png" alt="Roles and permissions management screen" /><br/><sub>RBAC — roles &amp; permission catalog</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/users.png" alt="User provisioning screen" /><br/><sub>User provisioning</sub></td>
+<td width="50%"><img src="docs/screenshots/audit-log.png" alt="Audit log screen" /><br/><sub>Audit log</sub></td>
+</tr>
+</table>
 
 ## Highlights
 
