@@ -45,14 +45,14 @@
 
 | | |
 |---|---|
-| 🏢 **Real multi-tenancy** | Every org's data is isolated at the ORM layer via EF Core global query filters keyed to the caller's JWT — not just an app-level `WHERE` clause someone can forget. Verified with tests that register two orgs and assert zero cross-tenant visibility. |
-| 🔐 **JWT + refresh rotation** | Short-lived access tokens, rotating refresh tokens. Reusing an already-rotated (revoked) token is treated as theft and revokes the entire chain. |
-| 🔑 **Google OAuth** | First sign-in auto-creates an org. Tokens never touch the redirect URL — a single-use, 60-second exchange code stands in for them until the frontend swaps it server-side. |
-| 🛡️ **Policy-based RBAC** | Roles map to a permission catalog (`users:create`, `roles:manage`, `audit:read`, …), enforced per-endpoint. Four starter roles seeded automatically per org. |
-| 📜 **Audit logging** | Every security-relevant event — logins, failures, role/permission changes, user creation — recorded and queryable per-tenant. |
-| 🚦 **Rate limiting** | Per-IP sliding-window limits on auth endpoints to blunt credential-stuffing and signup abuse. |
-| 🖥️ **Admin frontend** | Role/permission management, user provisioning, audit log viewer — RBAC-aware, so a 403 renders as a clear message, not a broken screen. |
-| ✅ **21 integration tests** | Real HTTP requests via `WebApplicationFactory` against a live Postgres database, running in CI on every push. |
+|  **Real multi-tenancy** | Every org's data is isolated at the ORM layer via EF Core global query filters keyed to the caller's JWT — not just an app-level `WHERE` clause someone can forget. Verified with tests that register two orgs and assert zero cross-tenant visibility. |
+|  **JWT + refresh rotation** | Short-lived access tokens, rotating refresh tokens. Reusing an already-rotated (revoked) token is treated as theft and revokes the entire chain. |
+|  **Google OAuth** | First sign-in auto-creates an org. Tokens never touch the redirect URL — a single-use, 60-second exchange code stands in for them until the frontend swaps it server-side. |
+|  **Policy-based RBAC** | Roles map to a permission catalog (`users:create`, `roles:manage`, `audit:read`, …), enforced per-endpoint. Four starter roles seeded automatically per org. |
+|  **Audit logging** | Every security-relevant event — logins, failures, role/permission changes, user creation — recorded and queryable per-tenant. |
+|  **Rate limiting** | Per-IP sliding-window limits on auth endpoints to blunt credential-stuffing and signup abuse. |
+|  **Admin frontend** | Role/permission management, user provisioning, audit log viewer — RBAC-aware, so a 403 renders as a clear message, not a broken screen. |
+|  **21 integration tests** | Real HTTP requests via `WebApplicationFactory` against a live Postgres database, running in CI on every push. |
 
 ## Tech stack
 
