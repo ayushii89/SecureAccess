@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -189,6 +190,21 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+// Railway (and most PaaS hosts) terminate TLS at their edge and forward plain HTTP to the
+// container, so without this ASP.NET Core thinks every request is HTTP: the OAuth handler
+// builds an http:// redirect_uri (mismatching the https:// one registered with Google) and
+// the rate limiter's per-IP partition key ends up keying on the proxy's IP for every request
+// instead of the real client. Must run before anything that reads Request.Scheme or
+// Connection.RemoteIpAddress. KnownNetworks/KnownProxies are cleared because Railway's edge
+// isn't a fixed, known proxy address — standard guidance for single-hop PaaS deployments.
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+};
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Swagger stays on in every environment, including the deployed demo — this is a portfolio
 // project meant to be explored, not an internal API that should hide its shape.
