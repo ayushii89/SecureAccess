@@ -9,7 +9,6 @@
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
 [**Live App**](https://frontend-mocha-gamma-16.vercel.app) &nbsp;·&nbsp; [**API + Swagger**](https://auth-production-2188.up.railway.app) &nbsp;·&nbsp; [**Frontend docs**](frontend/README.md)
 
@@ -45,7 +44,7 @@
 
 **Backend** — C#, ASP.NET Core 8, Entity Framework Core, PostgreSQL, JWT, Google OAuth
 **Frontend** — React, TypeScript, Vite
-**Infra** — Docker, Railway (API + Postgres), Vercel (frontend), GitHub Actions (CI)
+**Infra** — Railway (API + Postgres), Vercel (frontend), GitHub Actions (CI)
 **Testing** — xUnit + `WebApplicationFactory`
 
 ## Architecture
@@ -101,7 +100,7 @@ dotnet test
 
 ## Deployment
 
-The API is a single multi-stage Dockerfile (SDK build → aspnet runtime), deployed on **Railway** with a linked Postgres addon. The frontend is a static Vite build on **Vercel**, pointed at the Railway API via `VITE_API_BASE_URL`. Both sides authorize the browser origin through a `Cors:AllowedOrigins` config entry.
+The API is deployed on **Railway** (built directly from source) with a linked Postgres addon. The frontend is a static Vite build on **Vercel**, pointed at the Railway API via `VITE_API_BASE_URL`. Both sides authorize the browser origin through a `Cors:AllowedOrigins` config entry.
 
 > Railway terminates TLS at its edge and forwards plain HTTP to the container, so the API trusts `X-Forwarded-Proto`/`-For` (`ForwardedHeadersOptions`). Without it, the Google OAuth handler would build an `http://` redirect URI that mismatches the `https://` one registered with Google, and the rate limiter's per-IP key would track the proxy instead of the real client.
 
