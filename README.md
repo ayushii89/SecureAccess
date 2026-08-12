@@ -1,5 +1,7 @@
 # SecureAccess
 
+[![CI](https://github.com/ayushii89/SecureAccess/actions/workflows/ci.yml/badge.svg)](https://github.com/ayushii89/SecureAccess/actions/workflows/ci.yml)
+
 **Live demo:** [frontend-mocha-gamma-16.vercel.app](https://frontend-mocha-gamma-16.vercel.app) · **API + Swagger:** [auth-production-2188.up.railway.app](https://auth-production-2188.up.railway.app)
 
 A multi-tenant authentication & authorization platform — the kind of identity system an enterprise SaaS product needs under the hood, built end-to-end: backend, RBAC engine, audit trail, and admin UI.
