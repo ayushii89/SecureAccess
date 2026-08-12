@@ -1,27 +1,52 @@
+<div align="center">
+
 # SecureAccess
 
+**Multi-tenant Identity & Access Management platform** — JWT auth, Google OAuth, policy-based RBAC, audit logging, and rate limiting, built end-to-end with a live admin UI.
+
 [![CI](https://github.com/ayushii89/SecureAccess/actions/workflows/ci.yml/badge.svg)](https://github.com/ayushii89/SecureAccess/actions/workflows/ci.yml)
+![.NET 8](https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
-**Live demo:** [frontend-mocha-gamma-16.vercel.app](https://frontend-mocha-gamma-16.vercel.app) · **API + Swagger:** [auth-production-2188.up.railway.app](https://auth-production-2188.up.railway.app)
+[**Live App**](https://frontend-mocha-gamma-16.vercel.app) &nbsp;·&nbsp; [**API + Swagger**](https://auth-production-2188.up.railway.app) &nbsp;·&nbsp; [**Frontend docs**](frontend/README.md)
 
-A multi-tenant authentication & authorization platform — the kind of identity system an enterprise SaaS product needs under the hood, built end-to-end: backend, RBAC engine, audit trail, and admin UI.
+</div>
 
-## What's in it
+---
 
-- **Multi-tenancy** — every organization's data (users, roles, audit logs) is isolated at the ORM layer via EF Core global query filters scoped to the caller's JWT, not just filtered in application code. Verified with integration tests that register two orgs and assert zero cross-tenant visibility.
-- **JWT auth with refresh token rotation** — short-lived access tokens, long-lived refresh tokens that rotate on every use. Reusing an already-rotated (revoked) token is treated as theft and revokes the entire chain.
-- **Google OAuth login** — first-time sign-in auto-creates an org, matching the self-serve `/auth/register` flow. Tokens never appear in the OAuth redirect URL: the backend hands back a single-use, 60-second exchange code instead of the JWT itself, which the frontend immediately swaps for real tokens server-side.
-- **Policy-based RBAC** — roles map to a permission catalog (`users:create`, `roles:manage`, `audit:read`, ...) checked per-endpoint via `[Authorize(Policy = "...")]`. Four starter roles (Admin/Manager/Developer/Intern) are seeded automatically for every new org.
-- **Audit logging** — every security-relevant event (logins, failed logins, role/permission changes, user creation) is recorded and queryable per-tenant.
-- **Rate limiting** — per-IP sliding-window limits on `/auth/login`, `/auth/register`, `/auth/refresh` to blunt credential-stuffing and signup abuse.
-- **React admin frontend** — role/permission management, user provisioning, and audit log viewer, RBAC-aware (a 403 renders as a clear message, not a broken screen).
+## Contents
+
+- [Highlights](#highlights)
+- [Tech stack](#tech-stack)
+- [Architecture](#architecture)
+- [Running locally](#running-locally)
+- [API reference](#api-reference)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Roadmap](#roadmap)
+
+## Highlights
+
+| | |
+|---|---|
+| 🏢 **Real multi-tenancy** | Every org's data is isolated at the ORM layer via EF Core global query filters keyed to the caller's JWT — not just an app-level `WHERE` clause someone can forget. Verified with tests that register two orgs and assert zero cross-tenant visibility. |
+| 🔐 **JWT + refresh rotation** | Short-lived access tokens, rotating refresh tokens. Reusing an already-rotated (revoked) token is treated as theft and revokes the entire chain. |
+| 🔑 **Google OAuth** | First sign-in auto-creates an org. Tokens never touch the redirect URL — a single-use, 60-second exchange code stands in for them until the frontend swaps it server-side. |
+| 🛡️ **Policy-based RBAC** | Roles map to a permission catalog (`users:create`, `roles:manage`, `audit:read`, …), enforced per-endpoint. Four starter roles seeded automatically per org. |
+| 📜 **Audit logging** | Every security-relevant event — logins, failures, role/permission changes, user creation — recorded and queryable per-tenant. |
+| 🚦 **Rate limiting** | Per-IP sliding-window limits on auth endpoints to blunt credential-stuffing and signup abuse. |
+| 🖥️ **Admin frontend** | Role/permission management, user provisioning, audit log viewer — RBAC-aware, so a 403 renders as a clear message, not a broken screen. |
+| ✅ **21 integration tests** | Real HTTP requests via `WebApplicationFactory` against a live Postgres database, running in CI on every push. |
 
 ## Tech stack
 
-**Backend:** C#, ASP.NET Core 8, Entity Framework Core, PostgreSQL, JWT
-**Frontend:** React, TypeScript, Vite
-**Infra:** Docker, Railway (API + Postgres), Vercel (frontend)
-**Testing:** xUnit + `WebApplicationFactory` — 21 integration tests running the full HTTP pipeline against a live database
+**Backend** — C#, ASP.NET Core 8, Entity Framework Core, PostgreSQL, JWT, Google OAuth
+**Frontend** — React, TypeScript, Vite
+**Infra** — Docker, Railway (API + Postgres), Vercel (frontend), GitHub Actions (CI)
+**Testing** — xUnit + `WebApplicationFactory`
 
 ## Architecture
 
@@ -32,57 +57,56 @@ Organization (tenant)
   └── AuditLog
 ```
 
-`User.PasswordHash` is nullable — Google-only accounts have none and can't fall back to password login.
+Every tenant-scoped table (`Users`, `Roles`, `AuditLogs`) carries an `OrganizationId` plus an EF Core global query filter keyed off the current request's JWT `org_id` claim — a stray query without an explicit `WHERE OrganizationId = ...` still can't leak another tenant's data. `User.PasswordHash` is nullable since Google-only accounts have none.
 
-Every tenant-scoped table (`Users`, `Roles`, `AuditLogs`) carries an `OrganizationId` and an EF Core global query filter keyed off the current request's JWT `org_id` claim — so a stray query without an explicit `WHERE OrganizationId = ...` still can't leak another tenant's data.
+## Running locally
 
-## Run it locally
-
-**API:**
+**API**
 ```bash
 cp src/SecureAccess.Api/appsettings.Development.json.example src/SecureAccess.Api/appsettings.Development.json
-# edit the SigningKey in that file, e.g.: openssl rand -base64 32
-# Google:ClientId/ClientSecret are optional — password auth works fine without them,
-# "Continue with Google" just won't until you add a Google Cloud OAuth Client.
+# edit the SigningKey, e.g.: openssl rand -base64 32
+# Google:ClientId/ClientSecret are optional — password auth works without them
 
-# create a `secureaccess` Postgres database/user matching the connection string above, then:
-cd src/SecureAccess.Api
-dotnet run
+# create a `secureaccess` Postgres database/user matching the connection string, then:
+cd src/SecureAccess.Api && dotnet run
 ```
-Applies pending migrations and seeds the permission catalog automatically. Swagger at `/swagger`.
+Migrations and the permission catalog seed automatically on startup. Swagger UI at `/swagger`.
 
-**Frontend:**
+**Frontend**
 ```bash
 cd frontend
-npm install
-npm run dev
+npm install && npm run dev
 ```
-Opens on http://localhost:5173 — see [frontend/README.md](frontend/README.md).
+Opens on http://localhost:5173 — see [frontend/README.md](frontend/README.md) for structure.
 
-**Tests:**
-```bash
-dotnet test
-```
-
-## API overview
+## API reference
 
 | Endpoint | Description |
 |---|---|
-| `POST /auth/register` | Creates an Organization + its first user (Admin role) |
-| `POST /auth/login` | Email/password login (rate limited) |
-| `GET /auth/google/login` | Starts Google sign-in (rate limited) |
-| `POST /auth/google/exchange` | Swaps a one-time OAuth code for real tokens (rate limited) |
-| `POST /auth/refresh` | Rotates the refresh token (rate limited) |
-| `POST /roles`, `/roles/{id}/permissions`, `/roles/assign` | Manage RBAC (`roles:manage`) |
-| `POST /users` | Create users in your org (`users:create`) |
-| `GET /audit-logs` | Security event trail, scoped to your org (`audit:read`) |
+| `POST /auth/register` | Creates an Organization + first user (Admin role) |
+| `POST /auth/login` | Email/password login *(rate limited)* |
+| `GET /auth/google/login` | Starts Google sign-in *(rate limited)* |
+| `POST /auth/google/exchange` | Swaps a one-time OAuth code for real tokens *(rate limited)* |
+| `POST /auth/refresh` | Rotates the refresh token *(rate limited)* |
+| `POST /roles` · `/roles/{id}/permissions` · `/roles/assign` | Manage RBAC — requires `roles:manage` |
+| `POST /users` | Create users in your org — requires `users:create` |
+| `GET /audit-logs` | Security event trail, scoped to your org — requires `audit:read` |
+
+## Testing
+
+```bash
+dotnet test
+```
+21 integration tests covering auth flows, refresh rotation/reuse detection, RBAC enforcement, tenant isolation, rate limiting, and Google sign-in's org-creation logic — all running against a real PostgreSQL instance, not mocks. Runs automatically in [CI](https://github.com/ayushii89/SecureAccess/actions) on every push.
 
 ## Deployment
 
-The API is a single Dockerfile (multi-stage: SDK build → aspnet runtime), deployed on Railway with a linked Postgres addon. The frontend is a static Vite build on Vercel, pointed at the Railway API via `VITE_API_BASE_URL`. Both sides authenticate the browser origin through a `Cors:AllowedOrigins` config entry.
+The API is a single multi-stage Dockerfile (SDK build → aspnet runtime), deployed on **Railway** with a linked Postgres addon. The frontend is a static Vite build on **Vercel**, pointed at the Railway API via `VITE_API_BASE_URL`. Both sides authorize the browser origin through a `Cors:AllowedOrigins` config entry.
 
-Railway terminates TLS at its edge and forwards plain HTTP to the container, so the API trusts `X-Forwarded-Proto`/`-For` (`ForwardedHeadersOptions`) — without it, the Google OAuth handler builds an `http://` redirect URI that mismatches the `https://` one registered with Google, and the rate limiter's per-IP key ends up tracking the proxy instead of the real client.
+> Railway terminates TLS at its edge and forwards plain HTTP to the container, so the API trusts `X-Forwarded-Proto`/`-For` (`ForwardedHeadersOptions`). Without it, the Google OAuth handler would build an `http://` redirect URI that mismatches the `https://` one registered with Google, and the rate limiter's per-IP key would track the proxy instead of the real client.
 
-## Roadmap (not in this MVP)
+## Roadmap
 
-GitHub OAuth login, resource-level authorization policies beyond role→permission, Redis session cache.
+- [ ] GitHub OAuth login
+- [ ] Resource-level authorization policies beyond role→permission
+- [ ] Redis-backed session cache
